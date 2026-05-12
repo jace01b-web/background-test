@@ -15,27 +15,23 @@
             star: '#FFFFFF',
             dust: 'rgba(200, 200, 200, 0.15)',
             comet: '#FFFFFF',
-            // Updated to White with 0.5 transparency
+            // Changed to White with 0.5 transparency to keep it as an overlay
             text: 'rgba(255, 255, 255, 0.5)' 
         },
         overlayText: "InitialsAndVoices",
-        // Adjusted to 18px for a smaller, subtle look
-        overlayFont: "italic bold 18px 'Georgia', serif" 
+        // Reduced size to ~20px (70% smaller than 64px)
+        overlayFont: "italic bold 20px 'Georgia', serif" 
     };
 
-    // --- Utility Functions ---
     const Utils = {
         random: (min, max) => Math.random() * (max - min) + min,
         map: (value, inMin, inMax, outMin, outMax) => (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin,
         clamp: (value, min, max) => Math.max(min, Math.min(max, value))
     };
 
-    // --- Core Classes ---
     class Vector3D {
         constructor(x = 0, y = 0, z = 0) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            this.x = x; this.y = y; this.z = z;
         }
         reset(canvasWidth, canvasHeight, depth) {
             this.x = Utils.random(-canvasWidth, canvasWidth);
@@ -232,7 +228,7 @@
             this.ctx.fillStyle = CONFIG.colors.text;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            // Stays centered based on current canvas width/height
+            // Logic maintains perfect center alignment
             this.ctx.fillText(CONFIG.overlayText, this.width / 2, this.height / 2);
             this.ctx.restore();
         }
@@ -240,11 +236,9 @@
         draw() {
             this.ctx.fillStyle = CONFIG.colors.background;
             this.ctx.fillRect(0, 0, this.width, this.height);
-
             for (let i = 0; i < this.dustParticles.length; i++) this.dustParticles[i].draw(this.ctx);
             for (let i = 0; i < this.stars.length; i++) this.stars[i].draw(this.ctx);
             for (let i = 0; i < this.comets.length; i++) this.comets[i].draw(this.ctx);
-
             this.drawOverlayText();
         }
 
