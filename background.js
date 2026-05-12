@@ -15,12 +15,12 @@
             star: '#FFFFFF',
             dust: 'rgba(200, 200, 200, 0.15)',
             comet: '#FFFFFF',
-            // Added your requested Gold color with 0.5 transparency
-            text: 'rgba(255, 215, 0, 0.5)' 
+            // Switched to white with 0.5 transparency
+            text: 'rgba(255, 255, 255, 0.5)' 
         },
-        // Text specific configuration
         overlayText: "InitialsAndVoices",
-        overlayFont: "italic bold 64px 'Georgia', serif" 
+        // Adjusted to 14px for a "small" look
+        overlayFont: "italic bold 14px 'Georgia', serif" 
     };
 
     // --- Utility Functions ---
@@ -227,15 +227,13 @@
             for (let i = 0; i < this.comets.length; i++) this.comets[i].update();
         }
 
-        /**
-         * Draws the requested stylized text in the center of the screen.
-         */
         drawOverlayText() {
             this.ctx.save();
             this.ctx.font = CONFIG.overlayFont;
             this.ctx.fillStyle = CONFIG.colors.text;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
+            // Locked to the center of the screen
             this.ctx.fillText(CONFIG.overlayText, this.width / 2, this.height / 2);
             this.ctx.restore();
         }
@@ -248,7 +246,6 @@
             for (let i = 0; i < this.stars.length; i++) this.stars[i].draw(this.ctx);
             for (let i = 0; i < this.comets.length; i++) this.comets[i].draw(this.ctx);
 
-            // Draw the fancy gold text on top
             this.drawOverlayText();
         }
 
