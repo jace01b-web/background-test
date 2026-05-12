@@ -15,12 +15,12 @@
             star: '#FFFFFF',
             dust: 'rgba(200, 200, 200, 0.15)',
             comet: '#FFFFFF',
-            // Switched to white with 0.5 transparency
+            // Updated to White with 0.5 transparency
             text: 'rgba(255, 255, 255, 0.5)' 
         },
         overlayText: "InitialsAndVoices",
-        // Adjusted to 14px for a "small" look
-        overlayFont: "italic bold 14px 'Georgia', serif" 
+        // Adjusted to 18px for a smaller, subtle look
+        overlayFont: "italic bold 18px 'Georgia', serif" 
     };
 
     // --- Utility Functions ---
@@ -166,7 +166,6 @@
         }
     }
 
-    // --- Main Engine ---
     class SpaceEngine {
         constructor() {
             this.canvas = document.createElement('canvas');
@@ -233,7 +232,7 @@
             this.ctx.fillStyle = CONFIG.colors.text;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            // Locked to the center of the screen
+            // Stays centered based on current canvas width/height
             this.ctx.fillText(CONFIG.overlayText, this.width / 2, this.height / 2);
             this.ctx.restore();
         }
