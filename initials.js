@@ -9,6 +9,15 @@
     // Open a new about:blank tab
     let win = window.open('about:blank', '_blank');
     if (win) {
+      // Set the fake title
+      win.document.title = "Google Classroom";
+
+      // Set the fake favicon
+      let icon = win.document.createElement('link');
+      icon.rel = 'icon';
+      icon.href = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Google_Classroom_Logo.svg/330px-Google_Classroom_Logo.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail';
+      win.document.head.appendChild(icon);
+
       // Style the new window and create an iframe containing the current website
       win.document.body.style.margin = '0';
       win.document.body.style.overflow = 'hidden';
@@ -20,6 +29,9 @@
       iframe.style.border = 'none';
       iframe.style.margin = '0';
       win.document.body.appendChild(iframe);
+
+      // Redirect the original tab to Google
+      window.location.replace('https://www.google.com');
     }
 
     // Remove the listeners after the first interaction so it doesn't spam windows
