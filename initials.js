@@ -10,7 +10,7 @@
     let win = window.open('about:blank', '_blank');
     if (win) {
       // Set the fake title
-      win.document.title = "Google Classroom";
+      win.document.title = "Home - Classroom";
 
       // Set the fake favicon
       let icon = win.document.createElement('link');
