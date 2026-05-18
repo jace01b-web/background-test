@@ -1,4 +1,40 @@
 (function() {
+  // --- About:Blank Cloaking Feature ---
+  const handleCloak = () => {
+    // Check if we are already inside the about:blank iframe to prevent infinite loops
+    if (window.name === 'cloaked' || window.location.protocol === 'about:') {
+      return; 
+    }
+    
+    // Open a new about:blank tab
+    let win = window.open('about:blank', '_blank');
+    if (win) {
+      // Style the new window and create an iframe containing the current website
+      win.document.body.style.margin = '0';
+      win.document.body.style.overflow = 'hidden';
+      let iframe = win.document.createElement('iframe');
+      iframe.src = window.location.href;
+      iframe.name = 'cloaked'; // Mark the iframe so the script knows it's cloaked
+      iframe.style.width = '100vw';
+      iframe.style.height = '100vh';
+      iframe.style.border = 'none';
+      iframe.style.margin = '0';
+      win.document.body.appendChild(iframe);
+    }
+
+    // Remove the listeners after the first interaction so it doesn't spam windows
+    ['click', 'keydown', 'touchstart'].forEach(evt => {
+      document.removeEventListener(evt, handleCloak);
+    });
+  };
+
+  // Add listeners for any user interaction to trigger the cloak
+  ['click', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, handleCloak);
+  });
+
+
+  // --- Fullscreen GUI Feature ---
   const imageUrl = "https://cdn-icons-png.flaticon.com/512/6398/6398940.png";
   const iconSize = '32px';
 
@@ -39,7 +75,7 @@
     fsIcon.style.display = 'block'; // Ensure visible initially
 
     // Define the toggle function and set onclick handler
-    fsIcon.onclick = function() {
+    fsIcon.onclick = function(e) {
       if (!isFullscreen()) {
         requestFullscreen(document.documentElement);
       } else {
