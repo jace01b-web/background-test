@@ -112,14 +112,40 @@
                 --bg-color: rgba(10, 12, 18, var(--menu-alpha, 0.95));
             }
             #gd-standalone-menu {
-                position: fixed; top: 40px; left: 40px; width: 400px; height: 580px;
+                position: fixed; 
+                top: 50%; 
+                left: 40px; 
+                width: 400px; 
+                height: 580px;
                 background: var(--bg-color); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
                 border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
                 color: #e0e0e0; font-family: "Inter", "Segoe UI", sans-serif;
                 z-index: 9999999; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
                 user-select: none; display: flex; flex-direction: column;
-                transition: opacity 0.2s ease;
+                will-change: left, top, transform, opacity;
+                
+                /* Premium opening transition states */
+                opacity: 0;
+                transform: translateY(-50%) scale(0.92) translateX(-30px);
+                transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, filter 0.4s ease;
+                filter: blur(5px);
             }
+            
+            /* Class added slightly after DOM placement to trigger smooth entrance */
+            #gd-standalone-menu.menu-visible {
+                opacity: 1;
+                transform: translateY(-50%) scale(1) translateX(0px);
+                filter: blur(0px);
+            }
+            
+            /* Toggled visibility style when using the [M] hotkey */
+            #gd-standalone-menu.menu-hidden {
+                opacity: 0 !important;
+                transform: translateY(-50%) scale(0.95) translateX(-15px) !important;
+                pointer-events: none !important;
+                filter: blur(3px) !important;
+            }
+            
             .gd-header {
                 display: flex; justify-content: space-between; align-items: center;
                 background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(40,0,20,0.8));
@@ -127,7 +153,7 @@
                 border-bottom: 2px solid var(--theme-color); flex-shrink: 0;
             }
             .gd-title { font-weight: 800; font-size: 16px; color: #fff; text-shadow: 0 0 8px var(--theme-color); letter-spacing: 1px;}
-            .gd-fps { font-family: monospace; color: var(--theme-color); font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; }
+            .gd-fps { font-family: monospace; color: var(--theme-color); font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; pointer-events: auto; }
             
             /* Layout & Tab Wrapper */
             .gd-content-wrapper { display: flex; flex: 1; overflow: hidden; }
@@ -191,7 +217,7 @@
             .btn-group { display: flex; gap: 10px; }
             .btn-group .gd-btn { flex: 1; }
 
-            .gd-footer { background: rgba(0,0,0,0.7); padding: 10px; font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; }
+            .gd-footer { background: rgba(0,0,0,0.7); padding: 10px; font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; cursor: move; }
             
             /* Built-in Overlay Styles */
             #gd-aim-line { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--theme-color); box-shadow: 0 0 5px var(--theme-color); pointer-events: none; z-index: 9999; display: none; }
@@ -306,10 +332,17 @@
                     </div>
                 </div>
             </div>
-            <div class="gd-footer">Press [M] to Hide UI | Built for Wave Players</div>
+            <div class="gd-footer" id="gd-footer-handle">Press [M] to Hide UI | Built for Wave Players</div>
         `;
         document.body.appendChild(menu);
         
+        // Trigger entrance animation smoothly over next paint frame
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                menu.classList.add('menu-visible');
+            }, 10);
+        });
+
         setupTabSwitching();
         setupInputListeners();
     }
@@ -323,6 +356,7 @@
         </div>`;
     }
 
+    // Adjusting structure slightly to handle updates seamlessly
     function createToggle(label, key, subtext = '') {
         const checked = config[key] ? 'checked' : '';
         return `
@@ -387,7 +421,6 @@
         document.documentElement.style.setProperty('--menu-alpha', config.menuOpacity);
     }
 
-    // Central speed tracking logic synchronizer
     function syncSpeedMultiplier() {
         if (shiftHeld) {
             speedMultiplier = config.focusSpeed;
@@ -404,7 +437,6 @@
                 config[key] = val;
                 document.getElementById(`txt-${key}`).innerText = val + e.target.dataset.unit;
                 
-                // FIXED: Recalculate dynamic runtime speed limits globally regardless of context
                 if (key === 'baseSpeed' || key === 'focusSpeed') {
                     syncSpeedMultiplier();
                 }
@@ -420,13 +452,11 @@
             });
         });
 
-        // Add Listeners for Dynamic Dropdowns 
         document.querySelectorAll('.gd-select').forEach(sel => {
             sel.addEventListener('change', (e) => {
                 const key = e.target.dataset.key;
                 config[key] = e.target.value;
                 if (key === 'tabPosition') {
-                    // Update DOM class live
                     document.getElementById('gd-content-wrapper').className = `gd-content-wrapper pos-${config.tabPosition}`;
                 }
             });
@@ -436,7 +466,7 @@
             btn.addEventListener('click', (e) => {
                 const speed = parseFloat(e.target.dataset.speed);
                 config.baseSpeed = speed;
-                syncSpeedMultiplier(); // FIXED: Uses synchronizer fallback mechanism
+                syncSpeedMultiplier(); 
                 document.getElementById('sl-baseSpeed').value = speed;
                 document.getElementById('txt-baseSpeed').innerText = speed.toFixed(2) + 'x';
             });
@@ -450,19 +480,19 @@
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
             if (e.key === 'Shift') { 
                 shiftHeld = true; 
-                syncSpeedMultiplier(); // FIXED: Synchronized with the runtime context state tracking variable
+                syncSpeedMultiplier(); 
             }
             if (e.key.toLowerCase() === 'm') {
                 const menu = document.getElementById('gd-standalone-menu');
-                menu.style.opacity = menu.style.opacity === '0' ? '1' : '0';
-                menu.style.pointerEvents = menu.style.opacity === '0' ? 'none' : 'auto';
+                // Use css animation states via class names to toggle gracefully
+                menu.classList.toggle('menu-hidden');
             }
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Shift') { 
                 shiftHeld = false; 
-                syncSpeedMultiplier(); // FIXED: Synchronized with the runtime context state tracking variable
+                syncSpeedMultiplier(); 
             }
         });
 
@@ -602,24 +632,65 @@
     }
 
     // =========================================================
-    // 5. WINDOW CONTROLS
+    // 5. WINDOW CONTROLS (OPTIMIZED DRAGGING)
     // =========================================================
     function setupDragging() {
-        const handle = document.getElementById('gd-handle');
+        const headerHandle = document.getElementById('gd-handle');
+        const footerHandle = document.getElementById('gd-footer-handle');
         const menu = document.getElementById('gd-standalone-menu');
-        let dragging = false, x = 0, y = 0;
+        
+        let dragging = false;
+        let startX = 0, startY = 0;
+        let menuLeft = 40, menuTop = window.innerHeight / 2; // Fixed start alignment context
+        let mouseX = 0, mouseY = 0;
 
-        handle.addEventListener('mousedown', (e) => {
+        function onMouseDown(e) {
+            if (e.target.closest('input, select, .gd-btn, .gd-tab')) return;
+            
             dragging = true;
-            x = e.clientX - menu.getBoundingClientRect().left;
-            y = e.clientY - menu.getBoundingClientRect().top;
-        });
-        document.addEventListener('mousemove', (e) => {
+            const rect = menu.getBoundingClientRect();
+            menuLeft = rect.left;
+            menuTop = rect.top;
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            // Wipe out standard centering translate transform parameters cleanly once user starts drag handling manually
+            menu.style.transform = 'translateY(0) scale(1) translateX(0)';
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            
+            requestAnimationFrame(updateMenuPosition);
+        }
+
+        function onMouseMove(e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+
+        function onMouseUp() {
+            dragging = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        function updateMenuPosition() {
             if (!dragging) return;
-            menu.style.left = (e.clientX - x) + 'px';
-            menu.style.top = (e.clientY - y) + 'px';
-        });
-        document.addEventListener('mouseup', () => dragging = false);
+            
+            const deltaX = mouseX - startX;
+            const deltaY = mouseY - startY;
+            
+            menu.style.left = (menuLeft + deltaX) + 'px';
+            menu.style.top = (menuTop + deltaY) + 'px';
+            
+            requestAnimationFrame(updateMenuPosition);
+        }
+
+        headerHandle.addEventListener('mousedown', onMouseDown);
+        footerHandle.addEventListener('mousedown', onMouseDown);
     }
 
     function init() {
