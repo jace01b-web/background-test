@@ -37,7 +37,7 @@
         // Training
         ghostMode: 100, 
         
-        // New Modifiers (No Resizing)
+        // New Modifiers
         earthquake: false,
         deepFried: false,
         flashlight: false,
@@ -46,7 +46,8 @@
         
         // Menu
         menuOpacity: 0.95,
-        menuTheme: '#ff0055' 
+        menuTheme: '#ff0055',
+        tabPosition: 'top' // NEW: 'top', 'bottom', 'left', 'right'
     };
 
     function loadConfig() {
@@ -123,16 +124,36 @@
                 display: flex; justify-content: space-between; align-items: center;
                 background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(40,0,20,0.8));
                 padding: 15px 16px; cursor: move; border-top-left-radius: 12px; border-top-right-radius: 12px;
-                border-bottom: 2px solid var(--theme-color);
+                border-bottom: 2px solid var(--theme-color); flex-shrink: 0;
             }
             .gd-title { font-weight: 800; font-size: 16px; color: #fff; text-shadow: 0 0 8px var(--theme-color); letter-spacing: 1px;}
             .gd-fps { font-family: monospace; color: var(--theme-color); font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; }
             
-            /* Tabs */
-            .gd-tabs { display: flex; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; }
-            .gd-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 11px; font-weight: 600; cursor: pointer; color: #888; transition: 0.2s; text-transform: uppercase; }
+            /* Layout & Tab Wrapper */
+            .gd-content-wrapper { display: flex; flex: 1; overflow: hidden; }
+            .gd-tabs { display: flex; background: rgba(0,0,0,0.5); flex-shrink: 0; }
+            
+            /* Position Variations */
+            .pos-top { flex-direction: column; }
+            .pos-top .gd-tabs { flex-direction: row; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .pos-top .gd-tab.active { border-bottom: 2px solid var(--theme-color); }
+            
+            .pos-bottom { flex-direction: column-reverse; }
+            .pos-bottom .gd-tabs { flex-direction: row; border-top: 1px solid rgba(255,255,255,0.1); }
+            .pos-bottom .gd-tab.active { border-top: 2px solid var(--theme-color); }
+            
+            .pos-left { flex-direction: row; }
+            .pos-left .gd-tabs { flex-direction: column; width: 85px; border-right: 1px solid rgba(255,255,255,0.1); }
+            .pos-left .gd-tab.active { border-right: 2px solid var(--theme-color); background: rgba(255,255,255,0.1); }
+            
+            .pos-right { flex-direction: row-reverse; }
+            .pos-right .gd-tabs { flex-direction: column; width: 85px; border-left: 1px solid rgba(255,255,255,0.1); }
+            .pos-right .gd-tab.active { border-left: 2px solid var(--theme-color); background: rgba(255,255,255,0.1); }
+
+            /* Tab Styling */
+            .gd-tab { display: flex; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 10px 5px; font-size: 11px; font-weight: 600; cursor: pointer; color: #888; transition: 0.2s; text-transform: uppercase; }
             .gd-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
-            .gd-tab.active { color: var(--theme-color); background: rgba(255,255,255,0.1); border-bottom: 2px solid var(--theme-color); }
+            .gd-tab.active { color: var(--theme-color); background: rgba(255,255,255,0.1); }
             
             /* Body */
             .gd-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
@@ -162,12 +183,15 @@
             .gd-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--theme-color); cursor: pointer; transition: 0.1s; }
             .gd-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
+            .gd-select { background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 6px; border-radius: 4px; outline: none; cursor: pointer; font-family: inherit; font-size: 11px; }
+            .gd-select:focus { border-color: var(--theme-color); }
+
             .gd-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; text-align: center; }
             .gd-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--theme-color); color: var(--theme-color); }
             .btn-group { display: flex; gap: 10px; }
             .btn-group .gd-btn { flex: 1; }
 
-            .gd-footer { background: rgba(0,0,0,0.7); padding: 10px; font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+            .gd-footer { background: rgba(0,0,0,0.7); padding: 10px; font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; }
             
             /* Built-in Overlay Styles */
             #gd-aim-line { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--theme-color); box-shadow: 0 0 5px var(--theme-color); pointer-events: none; z-index: 9999; display: none; }
@@ -186,90 +210,100 @@
                 <span class="gd-fps" id="fps-counter">0 FPS</span>
             </div>
             
-            <div class="gd-tabs">
-                <div class="gd-tab active" data-target="tab-main">Main</div>
-                <div class="gd-tab" data-target="tab-visuals">Visuals</div>
-                <div class="gd-tab" data-target="tab-macros">Macros</div>
-                <div class="gd-tab" data-target="tab-training">Training</div>
-                <div class="gd-tab" data-target="tab-mods">Mods</div>
-                <div class="gd-tab" data-target="tab-config">Config</div>
-            </div>
-
-            <div class="gd-body">
-                <div class="tab-content active" id="tab-main">
-                    <div class="section-title">Engine Speed</div>
-                    ${createSlider('Base Speed', 'baseSpeed', 0.1, 3.0, 0.05, 'x')}
-                    ${createSlider('Focus Speed (Shift)', 'focusSpeed', 0.1, 1.0, 0.05, 'x')}
-                    ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
-                    
-                    <div class="section-title">Wave Stats</div>
-                    <div class="mod-row"><span class="mod-label">Session Clicks</span><span class="range-val" id="stat-clicks">0</span></div>
-                    <div class="mod-row"><span class="mod-label">Session Time</span><span class="range-val" id="stat-time">00:00</span></div>
+            <div class="gd-content-wrapper pos-${config.tabPosition}" id="gd-content-wrapper">
+                <div class="gd-tabs">
+                    <div class="gd-tab active" data-target="tab-main">Main</div>
+                    <div class="gd-tab" data-target="tab-visuals">Visuals</div>
+                    <div class="gd-tab" data-target="tab-macros">Macros</div>
+                    <div class="gd-tab" data-target="tab-training">Training</div>
+                    <div class="gd-tab" data-target="tab-mods">Mods</div>
+                    <div class="gd-tab" data-target="tab-config">Config</div>
                 </div>
 
-                <div class="tab-content" id="tab-visuals">
-                    <div class="section-title">Wave Colors</div>
-                    ${createToggle('Rainbow Mode', 'rainbowMode', 'Cycles canvas hue automatically')}
-                    ${createSlider('Rainbow Speed', 'rainbowSpeed', 0.5, 10.0, 0.5, 'x')}
-                    
-                    <div class="section-title">Transforms & Filters</div>
-                    ${createSlider('FOV / Zoom', 'zoom', 0.3, 2.0, 0.05, 'x')}
-                    ${createSlider('Rotation', 'rotation', -180, 180, 1, '°')}
-                    ${createToggle('Invert Gravity (Flip Y)', 'invertY')}
-                    ${createToggle('Mirror Mode (Flip X)', 'invertX')}
-                    ${createSlider('Brightness', 'brightness', 10, 200, 1, '%')}
-                    ${createSlider('Contrast', 'contrast', 10, 200, 1, '%')}
-                    ${createSlider('Saturation', 'saturation', 0, 300, 1, '%')}
-                    ${createSlider('Static Hue Shift', 'hue', 0, 360, 1, '°')}
-                    ${createSlider('Blur', 'blur', 0, 10, 0.5, 'px')}
-                    ${createSlider('Invert Colors', 'invertColors', 0, 100, 1, '%')}
-
-                    <div class="section-title">Wave Overlays</div>
-                    ${createToggle('Show Center Path (Aim Line)', 'showAimLine')}
-                    ${createToggle('Show Grid Map', 'showGrid')}
-                </div>
-
-                <div class="tab-content" id="tab-macros">
-                    <div class="section-title">Wave Auto-Clicker</div>
-                    ${createToggle('Enable Auto-Clicker (Hold C)', 'autoClickerActive', 'Spams precisely at target CPS')}
-                    ${createSlider('Target Speed', 'autoClickerCPS', 1, 150, 1, ' CPS')}
-                    ${createToggle('Jitter Click Simulation', 'jitterClick', 'Adds random MS variance to bypass macro detection')}
-                </div>
-
-                <div class="tab-content" id="tab-training">
-                    <div class="section-title">Visibility</div>
-                    ${createSlider('Ghost Mode (Opacity)', 'ghostMode', 10, 100, 1, '%')}
-                    
-                    <div class="section-title">Slow-Mo Presets</div>
-                    <div class="btn-group">
-                        <div class="gd-btn preset-btn" data-speed="0.25">0.25x</div>
-                        <div class="gd-btn preset-btn" data-speed="0.5">0.50x</div>
-                        <div class="gd-btn preset-btn" data-speed="0.75">0.75x</div>
-                        <div class="gd-btn preset-btn" data-speed="1.0">1.00x</div>
+                <div class="gd-body">
+                    <div class="tab-content active" id="tab-main">
+                        <div class="section-title">Engine Speed</div>
+                        ${createSlider('Base Speed', 'baseSpeed', 0.1, 3.0, 0.05, 'x')}
+                        ${createSlider('Focus Speed (Shift)', 'focusSpeed', 0.1, 1.0, 0.05, 'x')}
+                        ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
+                        
+                        <div class="section-title">Wave Stats</div>
+                        <div class="mod-row"><span class="mod-label">Session Clicks</span><span class="range-val" id="stat-clicks">0</span></div>
+                        <div class="mod-row"><span class="mod-label">Session Time</span><span class="range-val" id="stat-time">00:00</span></div>
                     </div>
-                </div>
 
-                <div class="tab-content" id="tab-mods">
-                    <div class="section-title">Movement Chaos</div>
-                    ${createToggle('Earthquake', 'earthquake', 'Violent screen shake')}
-                    
-                    <div class="section-title">Visual Chaos</div>
-                    ${createToggle('Deep Fried', 'deepFried', 'Max contrast and saturation')}
-                    
-                    <div class="section-title">Vision Restrictors</div>
-                    ${createToggle('Flashlight Mode', 'flashlight', 'Pitch black except for the center')}
-                    ${createToggle('Cinematic Bars', 'cinematic', 'Restricts vertical vision completely')}
-                    ${createToggle('Heavy Vignette', 'vignette', 'Darkens the outer edges to limit sight')}
-                </div>
+                    <div class="tab-content" id="tab-visuals">
+                        <div class="section-title">Wave Colors</div>
+                        ${createToggle('Rainbow Mode', 'rainbowMode', 'Cycles canvas hue automatically')}
+                        ${createSlider('Rainbow Speed', 'rainbowSpeed', 0.5, 10.0, 0.5, 'x')}
+                        
+                        <div class="section-title">Transforms & Filters</div>
+                        ${createSlider('FOV / Zoom', 'zoom', 0.3, 2.0, 0.05, 'x')}
+                        ${createSlider('Rotation', 'rotation', -180, 180, 1, '°')}
+                        ${createToggle('Invert Gravity (Flip Y)', 'invertY')}
+                        ${createToggle('Mirror Mode (Flip X)', 'invertX')}
+                        ${createSlider('Brightness', 'brightness', 10, 200, 1, '%')}
+                        ${createSlider('Contrast', 'contrast', 10, 200, 1, '%')}
+                        ${createSlider('Saturation', 'saturation', 0, 300, 1, '%')}
+                        ${createSlider('Static Hue Shift', 'hue', 0, 360, 1, '°')}
+                        ${createSlider('Blur', 'blur', 0, 10, 0.5, 'px')}
+                        ${createSlider('Invert Colors', 'invertColors', 0, 100, 1, '%')}
 
-                <div class="tab-content" id="tab-config">
-                    <div class="section-title">UI Appearance</div>
-                    ${createSlider('Menu Opacity', 'menuOpacity', 0.3, 1.0, 0.05, '')}
-                    
-                    <div class="section-title">Save Management</div>
-                    <div class="gd-btn" id="btn-save">Save Wave Profile</div>
-                    <div class="gd-btn" id="btn-load">Reload Profile</div>
-                    <div class="gd-btn" style="border-color:#ff4d4d; color:#ff4d4d; margin-top:5px;" id="btn-reset">Hard Reset</div>
+                        <div class="section-title">Wave Overlays</div>
+                        ${createToggle('Show Center Path (Aim Line)', 'showAimLine')}
+                        ${createToggle('Show Grid Map', 'showGrid')}
+                    </div>
+
+                    <div class="tab-content" id="tab-macros">
+                        <div class="section-title">Wave Auto-Clicker</div>
+                        ${createToggle('Enable Auto-Clicker (Hold C)', 'autoClickerActive', 'Spams precisely at target CPS')}
+                        ${createSlider('Target Speed', 'autoClickerCPS', 1, 150, 1, ' CPS')}
+                        ${createToggle('Jitter Click Simulation', 'jitterClick', 'Adds random MS variance to bypass macro detection')}
+                    </div>
+
+                    <div class="tab-content" id="tab-training">
+                        <div class="section-title">Visibility</div>
+                        ${createSlider('Ghost Mode (Opacity)', 'ghostMode', 10, 100, 1, '%')}
+                        
+                        <div class="section-title">Slow-Mo Presets</div>
+                        <div class="btn-group">
+                            <div class="gd-btn preset-btn" data-speed="0.25">0.25x</div>
+                            <div class="gd-btn preset-btn" data-speed="0.5">0.50x</div>
+                            <div class="gd-btn preset-btn" data-speed="0.75">0.75x</div>
+                            <div class="gd-btn preset-btn" data-speed="1.0">1.00x</div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-mods">
+                        <div class="section-title">Movement Chaos</div>
+                        ${createToggle('Earthquake', 'earthquake', 'Violent screen shake')}
+                        
+                        <div class="section-title">Visual Chaos</div>
+                        ${createToggle('Deep Fried', 'deepFried', 'Max contrast and saturation')}
+                        
+                        <div class="section-title">Vision Restrictors</div>
+                        ${createToggle('Flashlight Mode', 'flashlight', 'Pitch black except for the center')}
+                        ${createToggle('Cinematic Bars', 'cinematic', 'Restricts vertical vision completely')}
+                        ${createToggle('Heavy Vignette', 'vignette', 'Darkens the outer edges to limit sight')}
+                    </div>
+
+                    <div class="tab-content" id="tab-config">
+                        <div class="section-title">UI Layout</div>
+                        ${createSelect('Tab Position', 'tabPosition', [
+                            { value: 'top', text: 'Top (Default)' },
+                            { value: 'bottom', text: 'Bottom' },
+                            { value: 'left', text: 'Left Sidebar' },
+                            { value: 'right', text: 'Right Sidebar' }
+                        ])}
+
+                        <div class="section-title">UI Appearance</div>
+                        ${createSlider('Menu Opacity', 'menuOpacity', 0.3, 1.0, 0.05, '')}
+                        
+                        <div class="section-title">Save Management</div>
+                        <div class="gd-btn" id="btn-save">Save Wave Profile</div>
+                        <div class="gd-btn" id="btn-load">Reload Profile</div>
+                        <div class="gd-btn" style="border-color:#ff4d4d; color:#ff4d4d; margin-top:5px;" id="btn-reset">Hard Reset</div>
+                    </div>
                 </div>
             </div>
             <div class="gd-footer">Press [M] to Hide UI | Built for Wave Players</div>
@@ -280,6 +314,7 @@
         setupInputListeners();
     }
 
+    // Builder Helpers
     function createSlider(label, key, min, max, step, unit) {
         return `
         <div class="range-container">
@@ -294,6 +329,17 @@
         <div class="mod-row">
             <div class="mod-label">${label} <span class="mod-subtext">${subtext}</span></div>
             <label class="switch"><input type="checkbox" id="tg-${key}" data-key="${key}" ${checked}><span class="slider"></span></label>
+        </div>`;
+    }
+
+    function createSelect(label, key, options) {
+        let optsHTML = options.map(opt => `<option value="${opt.value}" ${config[key] === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('');
+        return `
+        <div class="mod-row" style="margin-bottom: 5px;">
+            <div class="mod-label">${label}</div>
+            <select class="gd-select" data-key="${key}">
+                ${optsHTML}
+            </select>
         </div>`;
     }
 
@@ -323,11 +369,9 @@
         if (!canvasTarget) canvasTarget = document.querySelector("#unity-canvas");
         if (!canvasTarget) return;
 
-        // Note: we leave dynamic values to the render loop, but apply static ones immediately.
         canvasTarget.style.opacity = config.ghostMode / 100;
         canvasTarget.style.transition = 'none';
 
-        // Overlays
         const aimLine = document.getElementById('gd-aim-line');
         const grid = document.getElementById('gd-grid-overlay');
         const flashlight = document.getElementById('gd-flashlight-overlay');
@@ -343,6 +387,15 @@
         document.documentElement.style.setProperty('--menu-alpha', config.menuOpacity);
     }
 
+    // Central speed tracking logic synchronizer
+    function syncSpeedMultiplier() {
+        if (shiftHeld) {
+            speedMultiplier = config.focusSpeed;
+        } else {
+            speedMultiplier = config.baseSpeed;
+        }
+    }
+
     function setupInputListeners() {
         document.querySelectorAll('.gd-range').forEach(sl => {
             sl.addEventListener('input', (e) => {
@@ -350,7 +403,11 @@
                 const val = parseFloat(e.target.value);
                 config[key] = val;
                 document.getElementById(`txt-${key}`).innerText = val + e.target.dataset.unit;
-                if (key === 'baseSpeed') speedMultiplier = val;
+                
+                // FIXED: Recalculate dynamic runtime speed limits globally regardless of context
+                if (key === 'baseSpeed' || key === 'focusSpeed') {
+                    syncSpeedMultiplier();
+                }
                 if (key !== 'rainbowSpeed') applyAllVisuals();
             });
         });
@@ -363,11 +420,23 @@
             });
         });
 
+        // Add Listeners for Dynamic Dropdowns 
+        document.querySelectorAll('.gd-select').forEach(sel => {
+            sel.addEventListener('change', (e) => {
+                const key = e.target.dataset.key;
+                config[key] = e.target.value;
+                if (key === 'tabPosition') {
+                    // Update DOM class live
+                    document.getElementById('gd-content-wrapper').className = `gd-content-wrapper pos-${config.tabPosition}`;
+                }
+            });
+        });
+
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const speed = parseFloat(e.target.dataset.speed);
                 config.baseSpeed = speed;
-                speedMultiplier = speed;
+                syncSpeedMultiplier(); // FIXED: Uses synchronizer fallback mechanism
                 document.getElementById('sl-baseSpeed').value = speed;
                 document.getElementById('txt-baseSpeed').innerText = speed.toFixed(2) + 'x';
             });
@@ -378,8 +447,11 @@
         document.getElementById('btn-reset').addEventListener('click', resetConfig);
 
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            if (e.key === 'Shift') { shiftHeld = true; speedMultiplier = config.focusSpeed; }
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.key === 'Shift') { 
+                shiftHeld = true; 
+                syncSpeedMultiplier(); // FIXED: Synchronized with the runtime context state tracking variable
+            }
             if (e.key.toLowerCase() === 'm') {
                 const menu = document.getElementById('gd-standalone-menu');
                 menu.style.opacity = menu.style.opacity === '0' ? '1' : '0';
@@ -388,7 +460,10 @@
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') { shiftHeld = false; speedMultiplier = config.baseSpeed; }
+            if (e.key === 'Shift') { 
+                shiftHeld = false; 
+                syncSpeedMultiplier(); // FIXED: Synchronized with the runtime context state tracking variable
+            }
         });
 
         document.addEventListener('mousedown', () => {
@@ -426,12 +501,14 @@
     }
 
     document.addEventListener('keydown', e => { 
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         if (e.key.toLowerCase() === 'c' && !spamKeyHeld) { 
             spamKeyHeld = true; 
             if (!autoClickTimer) triggerAutoClick();
         } 
     });
     document.addEventListener('keyup', e => { 
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
         if (e.key.toLowerCase() === 'c') spamKeyHeld = false; 
     });
 
@@ -445,7 +522,6 @@
                 unityContainer.style.position = 'relative';
             }
             
-            // Inject all static & dynamic overlays
             const overlays = `
                 <div id="gd-aim-line"></div>
                 <div id="gd-grid-overlay"></div>
@@ -468,7 +544,6 @@
             frames++;
             const now = performance.now();
             
-            // 1 Second UI Ticks
             if (now >= lastTime + 1000) {
                 const fps = Math.round((frames * 1000) / (now - lastTime));
                 const fpsEl = document.getElementById('fps-counter');
@@ -483,7 +558,6 @@
                 if(timeEl) timeEl.innerText = `${mins}:${secs}`;
             }
 
-            // High-Frequency Render Loop
             if (canvasTarget) {
                 let dynamicHue = config.hue;
                 let dynamicRot = config.rotation;
@@ -495,7 +569,6 @@
                 let scaleX = config.invertX ? (config.zoom * -1) : config.zoom;
                 let scaleY = config.invertY ? (config.zoom * -1) : config.zoom;
 
-                // Color Modifiers
                 if (config.rainbowMode) {
                     currentRainbowHue = (currentRainbowHue + config.rainbowSpeed) % 360;
                     dynamicHue = currentRainbowHue;
@@ -506,7 +579,6 @@
                     cSat = Math.max(cSat, 400);
                 }
 
-                // Apply Filters
                 canvasTarget.style.filter = `
                     brightness(${config.brightness}%) 
                     contrast(${cContrast}%) 
@@ -516,13 +588,11 @@
                     invert(${config.invertColors}%)
                 `;
 
-                // Transform Modifiers (No Scaling)
                 if (config.earthquake) {
                     transX = (Math.random() * 10 - 5);
                     transY = (Math.random() * 10 - 5);
                 }
 
-                // Apply Transforms
                 canvasTarget.style.transform = `translate(${transX}px, ${transY}px) scale(${scaleX}, ${scaleY}) rotate(${dynamicRot}deg)`;
             }
 
