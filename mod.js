@@ -76,6 +76,7 @@
     // =========================================================
     let speedMultiplier = config.baseSpeed;
     let shiftHeld = false;
+    let isTimeSkipping = false; // Prevents shift/base overrides during 24h skip
     
     const originalPerfNow = performance.now.bind(performance);
     let perfLastReal = originalPerfNow();
@@ -258,6 +259,9 @@
                         ${createSlider('Focus Speed (Shift)', 'focusSpeed', 0.1, 1.0, 0.05, 'x')}
                         ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
                         
+                        <div class="section-title">Time Skip</div>
+                        <div class="gd-btn" id="btn-timeskip" style="border-color: #ffcc00; color: #ffcc00;">Skip 24 Hours [Takes 1 Second - Can Cause Lag]</div>
+
                         <div class="section-title">Performance Opts</div>
                         ${createToggle('FPS Unlocker', 'fpsUnlocker', 'Bypasses browser monitor V-Sync caps')}
                         ${createToggle('Anti-Lag Mode', 'antiLag', 'Optimizes GPU canvas buffers')}
@@ -316,7 +320,7 @@
                         <div class="section-title">Visual Chaos</div>
                         ${createToggle('Deep Fried', 'deepFried', 'Max contrast and saturation')}
                         
-                        <div class="section-title">Vision Restrictors</div>
+                        <div class="section-title">Vision Restrictor</div>
                         ${createToggle('Flashlight Mode', 'flashlight', 'Pitch black except for the center')}
                         ${createToggle('Cinematic Bars', 'cinematic', 'Restricts vertical vision completely')}
                         ${createToggle('Heavy Vignette', 'vignette', 'Darkens the outer edges to limit sight')}
@@ -441,6 +445,7 @@
     }
 
     function syncSpeedMultiplier() {
+        if (isTimeSkipping) return; // Block input engine adjustments during burst skip
         if (shiftHeld) {
             speedMultiplier = config.focusSpeed;
         } else {
@@ -489,6 +494,29 @@
                 document.getElementById('sl-baseSpeed').value = speed;
                 document.getElementById('txt-baseSpeed').innerText = speed.toFixed(2) + 'x';
             });
+        });
+
+        // 24 Hour Engine Time Skip Logic
+        document.getElementById('btn-timeskip').addEventListener('click', (e) => {
+            if (isTimeSkipping) return;
+            isTimeSkipping = true;
+            
+            const btn = e.target;
+            const previousText = btn.innerText;
+            btn.innerText = "Skipping Time... Please Wait";
+            btn.style.borderColor = "#ff4d4d";
+            btn.style.color = "#ff4d4d";
+
+            // 24 hours = 86400 seconds. Processed over 1 second = 86400x multiplier
+            speedMultiplier = 86400;
+
+            setTimeout(() => {
+                isTimeSkipping = false;
+                syncSpeedMultiplier(); // Revert back safely
+                btn.innerText = previousText;
+                btn.style.borderColor = "#ffcc00";
+                btn.style.color = "#ffcc00";
+            }, 1000);
         });
 
         document.getElementById('btn-save').addEventListener('click', saveConfig);
