@@ -12,6 +12,7 @@
         timeFreeze: false,
         fpsUnlocker: false, // NEW: FPS Unlocker State
         antiLag: false,     // NEW: Anti-Lag State
+        loopWeek: false,    // NEW: Continuous 1-week-per-second loop state
         
         // Transforms & Filters
         zoom: 1.0,
@@ -76,7 +77,7 @@
     // =========================================================
     let speedMultiplier = config.baseSpeed;
     let shiftHeld = false;
-    let isTimeSkipping = false; // Prevents shift/base overrides during 24h skip
+    let isTimeSkipping = false; // Prevents overrides during 24h burst button
     
     const originalPerfNow = performance.now.bind(performance);
     let perfLastReal = originalPerfNow();
@@ -259,8 +260,9 @@
                         ${createSlider('Focus Speed (Shift)', 'focusSpeed', 0.1, 1.0, 0.05, 'x')}
                         ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
                         
-                        <div class="section-title">Time Skip</div>
-                        <div class="gd-btn" id="btn-timeskip" style="border-color: #ffcc00; color: #ffcc00;">Skip 24 Hours [Takes 1 Second]</div>
+                        <div class="section-title">Time Skip & Loops</div>
+                        <div class="gd-btn" id="btn-timeskip" style="border-color: #ffcc00; color: #ffcc00; margin-bottom: 8px;">Skip 24 Hours [Takes 1 Second]</div>
+                        ${createToggle('Loop 1 Week / Sec', 'loopWeek', 'Continuously runs game at 7 days every 1 second')}
 
                         <div class="section-title">Performance Opts</div>
                         ${createToggle('FPS Unlocker', 'fpsUnlocker', 'Bypasses browser monitor V-Sync caps')}
@@ -446,7 +448,11 @@
 
     function syncSpeedMultiplier() {
         if (isTimeSkipping) return; // Block input engine adjustments during burst skip
-        if (shiftHeld) {
+        
+        if (config.loopWeek) {
+            // 7 days = 604800 seconds. Processed over 1 second = 604800x speed
+            speedMultiplier = 604800;
+        } else if (shiftHeld) {
             speedMultiplier = config.focusSpeed;
         } else {
             speedMultiplier = config.baseSpeed;
@@ -472,6 +478,10 @@
             tg.addEventListener('change', (e) => {
                 const key = e.target.dataset.key;
                 config[key] = e.target.checked;
+                
+                if (key === 'loopWeek') {
+                    syncSpeedMultiplier();
+                }
                 applyAllVisuals();
             });
         });
@@ -498,7 +508,7 @@
 
         // 24 Hour Engine Time Skip Logic
         document.getElementById('btn-timeskip').addEventListener('click', (e) => {
-            if (isTimeSkipping) return;
+            if (isTimeSkipping || config.loopWeek) return; // Block button click if loop is already active
             isTimeSkipping = true;
             
             const btn = e.target;
