@@ -10,6 +10,8 @@
         baseSpeed: 1.0,
         focusSpeed: 0.5,
         timeFreeze: false,
+        fpsUnlocker: false, // NEW: FPS Unlocker State
+        antiLag: false,     // NEW: Anti-Lag State
         
         // Transforms & Filters
         zoom: 1.0,
@@ -47,7 +49,7 @@
         // Menu
         menuOpacity: 0.95,
         menuTheme: '#ff0055',
-        tabPosition: 'top' // NEW: 'top', 'bottom', 'left', 'right'
+        tabPosition: 'top' // 'top', 'bottom', 'left', 'right'
     };
 
     function loadConfig() {
@@ -70,7 +72,7 @@
     loadConfig();
 
     // =========================================================
-    // 2. ENGINE CLOCK HIJACK 
+    // 2. ENGINE CLOCK & RAF HIJACK (FPS UNLOCKER)
     // =========================================================
     let speedMultiplier = config.baseSpeed;
     let shiftHeld = false;
@@ -99,6 +101,18 @@
         return Math.floor(dateFake);
     };
 
+    // FPS Unlocker Core Interceptor
+    const originalRAF = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = function(callback) {
+        if (config.fpsUnlocker) {
+            // Unlocks V-Sync restrictions by execution forcing through the event loop macro-tasking
+            return setTimeout(() => {
+                callback(performance.now());
+            }, 0);
+        }
+        return originalRAF(callback);
+    };
+
     // =========================================================
     // 3. UI CONSTRUCTION
     // =========================================================
@@ -124,21 +138,18 @@
                 user-select: none; display: flex; flex-direction: column;
                 will-change: left, top, transform, opacity;
                 
-                /* Premium opening transition states */
                 opacity: 0;
                 transform: translateY(-50%) scale(0.92) translateX(-30px);
                 transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, filter 0.4s ease;
                 filter: blur(5px);
             }
             
-            /* Class added slightly after DOM placement to trigger smooth entrance */
             #gd-standalone-menu.menu-visible {
                 opacity: 1;
                 transform: translateY(-50%) scale(1) translateX(0px);
                 filter: blur(0px);
             }
             
-            /* Toggled visibility style when using the [M] hotkey */
             #gd-standalone-menu.menu-hidden {
                 opacity: 0 !important;
                 transform: translateY(-50%) scale(0.95) translateX(-15px) !important;
@@ -155,11 +166,9 @@
             .gd-title { font-weight: 800; font-size: 16px; color: #fff; text-shadow: 0 0 8px var(--theme-color); letter-spacing: 1px;}
             .gd-fps { font-family: monospace; color: var(--theme-color); font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 3px 6px; border-radius: 4px; pointer-events: auto; }
             
-            /* Layout & Tab Wrapper */
             .gd-content-wrapper { display: flex; flex: 1; overflow: hidden; }
             .gd-tabs { display: flex; background: rgba(0,0,0,0.5); flex-shrink: 0; }
             
-            /* Position Variations */
             .pos-top { flex-direction: column; }
             .pos-top .gd-tabs { flex-direction: row; border-bottom: 1px solid rgba(255,255,255,0.1); }
             .pos-top .gd-tab.active { border-bottom: 2px solid var(--theme-color); }
@@ -176,12 +185,10 @@
             .pos-right .gd-tabs { flex-direction: column; width: 85px; border-left: 1px solid rgba(255,255,255,0.1); }
             .pos-right .gd-tab.active { border-left: 2px solid var(--theme-color); background: rgba(255,255,255,0.1); }
 
-            /* Tab Styling */
             .gd-tab { display: flex; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 10px 5px; font-size: 11px; font-weight: 600; cursor: pointer; color: #888; transition: 0.2s; text-transform: uppercase; }
             .gd-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
             .gd-tab.active { color: var(--theme-color); background: rgba(255,255,255,0.1); }
             
-            /* Body */
             .gd-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
             .gd-body::-webkit-scrollbar { width: 6px; }
             .gd-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
@@ -190,7 +197,6 @@
             .tab-content.active { display: flex; }
             .section-title { font-size: 11px; text-transform: uppercase; color: var(--theme-color); font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-top: 5px;}
             
-            /* Controls */
             .mod-row { display: flex; justify-content: space-between; align-items: center; }
             .mod-label { font-size: 13px; font-weight: 600; display: flex; flex-direction: column; }
             .mod-subtext { font-size: 10px; color: #999; margin-top: 2px; font-weight: 400; }
@@ -219,7 +225,6 @@
 
             .gd-footer { background: rgba(0,0,0,0.7); padding: 10px; font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; flex-shrink: 0; cursor: move; }
             
-            /* Built-in Overlay Styles */
             #gd-aim-line { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--theme-color); box-shadow: 0 0 5px var(--theme-color); pointer-events: none; z-index: 9999; display: none; }
             #gd-grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 9998; display: none; }
             #gd-flashlight-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, transparent 80px, rgba(0,0,0,0.98) 120px); pointer-events: none; z-index: 9998; display: none; }
@@ -253,6 +258,10 @@
                         ${createSlider('Focus Speed (Shift)', 'focusSpeed', 0.1, 1.0, 0.05, 'x')}
                         ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
                         
+                        <div class="section-title">Performance Opts</div>
+                        ${createToggle('FPS Unlocker', 'fpsUnlocker', 'Bypasses browser monitor V-Sync caps')}
+                        ${createToggle('Anti-Lag Mode', 'antiLag', 'Optimizes GPU canvas buffers')}
+
                         <div class="section-title">Wave Stats</div>
                         <div class="mod-row"><span class="mod-label">Session Clicks</span><span class="range-val" id="stat-clicks">0</span></div>
                         <div class="mod-row"><span class="mod-label">Session Time</span><span class="range-val" id="stat-time">00:00</span></div>
@@ -336,7 +345,6 @@
         `;
         document.body.appendChild(menu);
         
-        // Trigger entrance animation smoothly over next paint frame
         requestAnimationFrame(() => {
             setTimeout(() => {
                 menu.classList.add('menu-visible');
@@ -347,7 +355,6 @@
         setupInputListeners();
     }
 
-    // Builder Helpers
     function createSlider(label, key, min, max, step, unit) {
         return `
         <div class="range-container">
@@ -356,7 +363,6 @@
         </div>`;
     }
 
-    // Adjusting structure slightly to handle updates seamlessly
     function createToggle(label, key, subtext = '') {
         const checked = config[key] ? 'checked' : '';
         return `
@@ -406,6 +412,21 @@
         canvasTarget.style.opacity = config.ghostMode / 100;
         canvasTarget.style.transition = 'none';
 
+        // Anti-Lag hardware acceleration optimizations
+        if (config.antiLag) {
+            canvasTarget.style.imageRendering = 'pixelated';
+            canvasTarget.style.willChange = 'transform';
+            document.documentElement.style.setProperty('--menu-alpha', '1.0'); 
+            const menuEl = document.getElementById('gd-standalone-menu');
+            if (menuEl) menuEl.style.backdropFilter = 'none'; // Drops costly blurs
+        } else {
+            canvasTarget.style.imageRendering = 'auto';
+            canvasTarget.style.willChange = 'auto';
+            document.documentElement.style.setProperty('--menu-alpha', config.menuOpacity);
+            const menuEl = document.getElementById('gd-standalone-menu');
+            if (menuEl) menuEl.style.backdropFilter = 'blur(15px)';
+        }
+
         const aimLine = document.getElementById('gd-aim-line');
         const grid = document.getElementById('gd-grid-overlay');
         const flashlight = document.getElementById('gd-flashlight-overlay');
@@ -417,8 +438,6 @@
         if (flashlight) flashlight.style.display = config.flashlight ? 'block' : 'none';
         if (cinematic) cinematic.style.display = config.cinematic ? 'block' : 'none';
         if (vignette) vignette.style.display = config.vignette ? 'block' : 'none';
-
-        document.documentElement.style.setProperty('--menu-alpha', config.menuOpacity);
     }
 
     function syncSpeedMultiplier() {
@@ -484,7 +503,6 @@
             }
             if (e.key.toLowerCase() === 'm') {
                 const menu = document.getElementById('gd-standalone-menu');
-                // Use css animation states via class names to toggle gracefully
                 menu.classList.toggle('menu-hidden');
             }
         });
@@ -589,41 +607,46 @@
             }
 
             if (canvasTarget) {
-                let dynamicHue = config.hue;
-                let dynamicRot = config.rotation;
-                let cContrast = config.contrast;
-                let cSat = config.saturation;
-                
+                // If Anti-Lag is turned on, skip heavy filter recalculations completely
+                if (config.antiLag) {
+                    canvasTarget.style.filter = 'none';
+                } else {
+                    let dynamicHue = config.hue;
+                    let cContrast = config.contrast;
+                    let cSat = config.saturation;
+
+                    if (config.rainbowMode) {
+                        currentRainbowHue = (currentRainbowHue + config.rainbowSpeed) % 360;
+                        dynamicHue = currentRainbowHue;
+                    }
+
+                    if (config.deepFried) {
+                        cContrast = Math.max(cContrast, 300);
+                        cSat = Math.max(cSat, 400);
+                    }
+
+                    canvasTarget.style.filter = `
+                        brightness(${config.brightness}%) 
+                        contrast(${cContrast}%) 
+                        saturate(${cSat}%) 
+                        hue-rotate(${dynamicHue}deg) 
+                        blur(${config.blur}px) 
+                        invert(${config.invertColors}%)
+                    `;
+                }
+
                 let transX = 0;
                 let transY = 0;
                 let scaleX = config.invertX ? (config.zoom * -1) : config.zoom;
                 let scaleY = config.invertY ? (config.zoom * -1) : config.zoom;
-
-                if (config.rainbowMode) {
-                    currentRainbowHue = (currentRainbowHue + config.rainbowSpeed) % 360;
-                    dynamicHue = currentRainbowHue;
-                }
-
-                if (config.deepFried) {
-                    cContrast = Math.max(cContrast, 300);
-                    cSat = Math.max(cSat, 400);
-                }
-
-                canvasTarget.style.filter = `
-                    brightness(${config.brightness}%) 
-                    contrast(${cContrast}%) 
-                    saturate(${cSat}%) 
-                    hue-rotate(${dynamicHue}deg) 
-                    blur(${config.blur}px) 
-                    invert(${config.invertColors}%)
-                `;
+                let dynamicRot = config.rotation;
 
                 if (config.earthquake) {
                     transX = (Math.random() * 10 - 5);
                     transY = (Math.random() * 10 - 5);
                 }
 
-                canvasTarget.style.transform = `translate(${transX}px, ${transY}px) scale(${scaleX}, ${scaleY}) rotate(${dynamicRot}deg)`;
+                canvasTarget.style.transform = `translate3d(${transX}px, ${transY}px, 0) scale(${scaleX}, ${scaleY}) rotate(${dynamicRot}deg)`;
             }
 
             requestAnimationFrame(updateLoop);
@@ -641,7 +664,7 @@
         
         let dragging = false;
         let startX = 0, startY = 0;
-        let menuLeft = 40, menuTop = window.innerHeight / 2; // Fixed start alignment context
+        let menuLeft = 40, menuTop = window.innerHeight / 2; 
         let mouseX = 0, mouseY = 0;
 
         function onMouseDown(e) {
@@ -657,7 +680,6 @@
             mouseX = e.clientX;
             mouseY = e.clientY;
             
-            // Wipe out standard centering translate transform parameters cleanly once user starts drag handling manually
             menu.style.transform = 'translateY(0) scale(1) translateX(0)';
             
             document.addEventListener('mousemove', onMouseMove);
