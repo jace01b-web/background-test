@@ -260,7 +260,7 @@
                         ${createToggle('Freeze Time', 'timeFreeze', 'Halts the game completely')}
                         
                         <div class="section-title">Time Skip</div>
-                        <div class="gd-btn" id="btn-timeskip" style="border-color: #ffcc00; color: #ffcc00;">Skip 24 Hours [Takes 1 Second - Can Cause Lag]</div>
+                        <div class="gd-btn" id="btn-timeskip" style="border-color: #ffcc00; color: #ffcc00;">Skip 24 Hours [Takes 1 Second]</div>
 
                         <div class="section-title">Performance Opts</div>
                         ${createToggle('FPS Unlocker', 'fpsUnlocker', 'Bypasses browser monitor V-Sync caps')}
